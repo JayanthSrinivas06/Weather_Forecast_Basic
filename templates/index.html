@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weather App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    body {
+      background-image: url("{{ url_for('static', filename='imgs/backgrnd.png') }}");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+
+    .container {
+      max-width: 720px;
+      margin-top: 40px;
+      background: linear-gradient(120deg, #ffffffdd, #efd298dd);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .forecast-card {
+      height: 300px;
+      background: linear-gradient(120deg, #b2ebf2dd, #ffededdd);
+      border-radius: 15px;
+      padding: 15px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
+      user-select: none;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+      text-align: center;
+    }
+
+    .forecast-card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .current-weather-icon {
+      width: 150px;
+      height: 150px;
+      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
+    }
+
+    .forecast-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 5px;
+    }
+
+    .header-title {
+      font-weight: 700;
+      margin-bottom: 25px;
+      text-align: center;
+      color: #004e92;
+      text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.6);
+    }
+
+    .header-subtitle {
+      font-size: 0.8rem;
+      color: #666;
+      justify-content: center;
+      text-align: center;
+      margin-top: -20px;
+      margin-left: 200px;
+    }
+  </style>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="mb-3 text-start fw-light text-primary" style="font-size: 1.0rem">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <span id="clock" style="color: #000000d5;">{{ current_time }}</span>
+        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#infoModal" style="color: #333;">
+          <i class="bi bi-info-circle"></i>
+        </button>
+      </div>
+    </div>
+
+    <h1 class="header-title">Weather App</h1>
+    <h2 class="header-subtitle">- By Jayanth Srinivas Bommisetty</h2><br>
+
+
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="infoModalLabel">About PM Accelerator</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            PM Accelerator is a career development platform helping professionals become world-class Product
+            Managers.<br>
+            <a href="https://www.linkedin.com/school/pmaccelerator/" target="_blank">Learn more on LinkedIn</a>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" class="mb-4">
+      <div class="input-group">
+        <input type="text" name="city" class="form-control" placeholder="Enter city name (e.g., London, New York)"
+          required value="{{ request.form.get('city') or '' }}" aria-label="City name" />
+
+        <button class="btn btn-primary" type="submit">Get Weather</button>
+      </div>
+    </form>
+
+    {% if error %}
+    <div class="alert alert-danger text-center">{{ error }}</div>
+    {% endif %}
+
+    {% if weather %}
+    <div class="text-center mb-5">
+      <h2>{{ weather.name }}, {{ weather.sys.country }}</h2>
+      <img src="http://openweathermap.org/img/wn/{{ weather.weather[0].icon }}@4x.png" alt="Weather Icon"
+        class="current-weather-icon" />
+      <h3 class="display-4">{{ weather.main.temp }} °C</h3>
+      <p class="lead text-capitalize">{{ weather.weather[0].description }}</p>
+      <p>Humidity: <strong>{{ weather.main.humidity }}%</strong></p>
+      <p>Wind Speed: <strong>{{ weather.wind.speed }} m/s</strong></p>
+    </div>
+    {% endif %}
+
+    {% if forecast and forecast.list %}
+    <h3 class="mb-4 text-center" style="color:#004e92; font-weight:600;">5-Day Forecast</h3>
+    <div class="row g-3 justify-content-center">
+      {% for day in forecast.list[::8] %}
+      <div class="col-6 col-md-2">
+        <div class="forecast-card">
+          <h5>{{ day.dt_txt | datetimeformat }}</h5>
+          <img src="http://openweathermap.org/img/wn/{{ day.weather[0].icon }}@2x.png" alt="Icon"
+            class="forecast-icon" />
+          <p class="mb-1 fs-5">{{ day.main.temp | round }} °C</p>
+          <p class="text-capitalize mb-0" style="font-size: 0.9rem;">
+            {{ day.weather[0].description }}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+      const date = now.toLocaleDateString(undefined, options);
+      const time = now.toLocaleTimeString();
+      document.getElementById('clock').textContent = `${date} | ${time}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+
+</html>
